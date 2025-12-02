@@ -1,20 +1,123 @@
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { RegisterScreen } from './src/screens/RegisterScreen';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { CategoriesScreen } from './src/screens/CategoriesScreen';
+import { ProductsScreen } from './src/screens/ProductsScreen';
+import { CategoryFormScreen } from './src/screens/CategoryFormScreen';
+import { ProductFormScreen } from './src/screens/ProductFormScreen';
+import { Category, Product } from './src/types';
+
+type Screen = 'login' | 'register' | 'home' | 'categories' | 'products' | 'categoryForm' | 'productForm';
+
+function AppContent() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [currentScreen, setCurrentScreen] = useState<Screen>('login');
+  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#3B82F6" />
+      </View>
+    );
+  }
+
+  if (isAuthenticated) {
+    switch (currentScreen) {
+      case 'categories':
+        return (
+          <CategoriesScreen
+            onNavigateBack={() => setCurrentScreen('home')}
+            onNavigateToForm={(category?: Category) => {
+              setSelectedCategory(category);
+              setCurrentScreen('categoryForm');
+            }}
+          />
+        );
+      
+      case 'categoryForm':
+        return (
+          <CategoryFormScreen
+            category={selectedCategory}
+            onNavigateBack={() => {
+              setSelectedCategory(undefined);
+              setCurrentScreen('categories');
+            }}
+            onSuccess={() => {
+              setSelectedCategory(undefined);
+            }}
+          />
+        );
+      
+      case 'products':
+        return (
+          <ProductsScreen
+            onNavigateBack={() => setCurrentScreen('home')}
+            onNavigateToForm={(product?: Product) => {
+              setSelectedProduct(product);
+              setCurrentScreen('productForm');
+            }}
+          />
+        );
+      
+      case 'productForm':
+        return (
+          <ProductFormScreen
+            product={selectedProduct}
+            onNavigateBack={() => {
+              setSelectedProduct(undefined);
+              setCurrentScreen('products');
+            }}
+            onSuccess={() => {
+              setSelectedProduct(undefined);
+            }}
+          />
+        );
+      
+      default:
+        return (
+          <HomeScreen
+            onNavigateToCategories={() => setCurrentScreen('categories')}
+            onNavigateToProducts={() => setCurrentScreen('products')}
+          />
+        );
+    }
+  }
+
+  if (currentScreen === 'register') {
+    return (
+      <RegisterScreen 
+        onNavigateToLogin={() => setCurrentScreen('login')} 
+      />
+    );
+  }
+
+  return (
+    <LoginScreen 
+      onNavigateToRegister={() => setCurrentScreen('register')} 
+    />
+  );
+}
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <AuthProvider>
       <StatusBar style="auto" />
-    </View>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
 });
