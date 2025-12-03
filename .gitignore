@@ -41,6 +41,5 @@ yarn-error.*
 /ios
 /android
 
-# documentation files
-*.md
+# scripts
 *.bat

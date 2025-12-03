@@ -32,12 +32,6 @@ const detectFieldFromMessage = (message: string): string | null => {
 export const parseBackendErrors = (error: any): ParsedErrors => {
   const parsedErrors: ParsedErrors = {};
 
-  console.log('Parsing backend error:', {
-    hasResponse: !!error?.response,
-    hasData: !!error?.response?.data,
-    data: error?.response?.data,
-  });
-
   if (!error?.response?.data) {
     return parsedErrors;
   }
@@ -66,8 +60,6 @@ export const parseBackendErrors = (error: any): ParsedErrors => {
       }
     }
   }
-
-  console.log('Parsed errors:', parsedErrors);
 
   return parsedErrors;
 };

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { lightTheme } from './src/config/theme';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
@@ -21,7 +24,7 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
     );
@@ -106,10 +109,16 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <StatusBar style="auto" />
-      <AppContent />
-    </AuthProvider>
+    <SafeAreaProvider style={{ backgroundColor: '#ffffff' }}>
+      <PaperProvider theme={lightTheme}>
+        <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+          <AuthProvider>
+            <StatusBar style="dark" backgroundColor="#ffffff" />
+            <AppContent />
+          </AuthProvider>
+        </View>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
 
@@ -118,6 +127,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
   },
 });

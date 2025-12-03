@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
+  StyleSheet,
 } from 'react-native';
-import { FormInput } from '../components/FormInput';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ImagePickerComponent } from '../components/ImagePickerComponent';
-import { Toast } from '../components/Toast';
 import { categoryService } from '../services/category.service';
 import { Category, CategoryFormData } from '../types';
 import { useToast } from '../hooks';
-import { styles } from '../styles/CategoryFormScreen.styles';
+import { AppBar, AppButton, AppTextInput } from '../components/common';
+import { AppSnackbar } from '../components/AppSnackbar';
 
 interface CategoryFormScreenProps {
   category?: Category;
@@ -85,7 +82,12 @@ export const CategoryFormScreen: React.FC<CategoryFormScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <AppBar 
+        title={isEditing ? 'Editar Categoria' : 'Nova Categoria'}
+        onBack={onNavigateBack}
+      />
+      
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -95,26 +97,6 @@ export const CategoryFormScreen: React.FC<CategoryFormScreenProps> = ({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Toast
-            visible={toast.visible}
-            message={toast.message}
-            type={toast.type}
-            onHide={hideToast}
-          />
-
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => onNavigateBack?.()}
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>
-              {isEditing ? 'Editar Categoria' : 'Nova Categoria'}
-            </Text>
-            <View style={styles.placeholder} />
-          </View>
-
           <View style={styles.formContainer}>
             <ImagePickerComponent
               label="Imagem da Categoria"
@@ -122,7 +104,7 @@ export const CategoryFormScreen: React.FC<CategoryFormScreenProps> = ({
               onImageSelect={setImagemUrl}
             />
 
-            <FormInput
+            <AppTextInput
               label="Nome da Categoria"
               placeholder="Ex: Eletrônicos, Alimentos..."
               value={nome}
@@ -132,25 +114,48 @@ export const CategoryFormScreen: React.FC<CategoryFormScreenProps> = ({
               }}
               error={nomeError}
               touched={!!nomeError}
-              editable={!isLoading}
+              disabled={isLoading}
             />
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+            <AppButton
+              mode="contained"
               onPress={handleSubmit}
+              loading={isLoading}
               disabled={isLoading}
+              style={styles.button}
             >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.buttonText}>
-                  {isEditing ? 'Atualizar' : 'Criar Categoria'}
-                </Text>
-              )}
-            </TouchableOpacity>
+              {isEditing ? 'Atualizar' : 'Criar Categoria'}
+            </AppButton>
           </View>
         </ScrollView>
+
+        <AppSnackbar
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onDismiss={hideToast}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  formContainer: {
+    flex: 1,
+  },
+  button: {
+    marginTop: 16,
+  },
+});

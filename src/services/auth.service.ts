@@ -12,25 +12,11 @@ import {
 class AuthService {
   async login(credentials: LoginRequest): Promise<ApiResponse<LoginResponse>> {
     try {
-      if (API_CONFIG.DEBUG) {
-        console.log('Tentando login:', {
-          url: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LOGIN}`,
-          username: credentials.username,
-        });
-      }
 
       const response = await api.post<ApiResponse<LoginResponse>>(
         API_CONFIG.ENDPOINTS.LOGIN,
         credentials
       );
-
-      if (API_CONFIG.DEBUG) {
-        console.log('Login response:', {
-          valid: response.data.valid,
-          hasData: !!response.data.data,
-          data: response.data.data,
-        });
-      }
 
       if (response.data.valid && response.data.data) {
         const { user, auth } = response.data.data;
@@ -39,11 +25,6 @@ class AuthService {
 
       return response.data;
     } catch (error: any) {
-      console.error('Erro no login:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
       throw error;
     }
   }
@@ -60,7 +41,6 @@ class AuthService {
     try {
       await api.post(`${API_CONFIG.ENDPOINTS.REVOKE}/${username}`);
     } catch (error) {
-      console.error('Erro ao revogar token no servidor:', error);
     } finally {
       await this.clearAuthData();
     }

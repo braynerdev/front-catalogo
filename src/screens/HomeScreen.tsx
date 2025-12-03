@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Text, Card, IconButton, Surface } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
-import { NavigationCard } from '../components/NavigationCard';
-import { styles } from '../styles/HomeScreen.styles';
+import { UserProfileCard } from '../components/UserProfileCard';
+import { DashboardStats } from '../components/DashboardStats';
 
 interface HomeScreenProps {
   onNavigateToCategories?: () => void;
@@ -15,59 +17,141 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   const { user, logout } = useAuth();
 
+  if (!user) return null;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.header}>
+        <Text variant="headlineMedium" style={styles.title}>
+          Bem-vindo de volta! 👋
+        </Text>
+        <IconButton
+          icon="logout"
+          mode="contained-tonal"
+          iconColor="#EF4444"
+          size={24}
+          onPress={logout}
+        />
+      </View>
+
       <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Bem-vindo!</Text>
-            <Text style={styles.subtitle}>Olá, {user?.username}</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Text style={styles.logoutIcon}>⎋</Text>
-          </TouchableOpacity>
-        </View>
+        <UserProfileCard user={user} />
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gerenciar</Text>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Gerenciamento
+          </Text>
           
-          <NavigationCard
-            title="Categorias"
-            description="Criar e gerenciar categorias de produtos"
-            icon="📂"
-            color="#3B82F6"
+          <Card 
+            mode="elevated" 
+            style={styles.navCard}
             onPress={() => onNavigateToCategories?.()}
-          />
+          >
+            <Card.Content style={styles.cardContent}>
+              <Surface style={[styles.iconCircle, { backgroundColor: '#DBEAFE' }]} elevation={0}>
+                <Text style={styles.cardIcon}>📂</Text>
+              </Surface>
+              <View style={styles.cardInfo}>
+                <Text variant="titleMedium" style={styles.cardTitle}>
+                  Categorias
+                </Text>
+                <Text variant="bodyMedium" style={styles.cardDescription}>
+                  Criar e gerenciar categorias de produtos
+                </Text>
+              </View>
+              <IconButton icon="chevron-right" size={20} />
+            </Card.Content>
+          </Card>
 
-          <NavigationCard
-            title="Produtos"
-            description="Adicionar e editar produtos do catálogo"
-            icon="📦"
-            color="#10B981"
+          <Card 
+            mode="elevated" 
+            style={styles.navCard}
             onPress={() => onNavigateToProducts?.()}
-          />
+          >
+            <Card.Content style={styles.cardContent}>
+              <Surface style={[styles.iconCircle, { backgroundColor: '#D1FAE5' }]} elevation={0}>
+                <Text style={styles.cardIcon}>📦</Text>
+              </Surface>
+              <View style={styles.cardInfo}>
+                <Text variant="titleMedium" style={styles.cardTitle}>
+                  Produtos
+                </Text>
+                <Text variant="bodyMedium" style={styles.cardDescription}>
+                  Adicionar e editar produtos do catálogo
+                </Text>
+              </View>
+              <IconButton icon="chevron-right" size={20} />
+            </Card.Content>
+          </Card>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informações</Text>
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Usuário</Text>
-              <Text style={styles.infoValue}>{user?.username}</Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>ID</Text>
-              <Text style={styles.infoValue}>{user?.id}</Text>
-            </View>
-          </View>
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            Estatísticas Rápidas
+          </Text>
+          <DashboardStats />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  title: {
+    fontWeight: '700',
+  },
+  scrollContent: {
+    padding: 16,
+    paddingTop: 0,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  navCard: {
+    marginVertical: 6,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  cardIcon: {
+    fontSize: 28,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cardDescription: {
+    opacity: 0.7,
+  },
+});

@@ -43,7 +43,6 @@ export const uploadService = {
         publicId: data.public_id,
       };
     } catch (error) {
-      console.error('Erro no upload:', error);
       throw error;
     }
   },

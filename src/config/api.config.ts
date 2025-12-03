@@ -1,7 +1,7 @@
 import { ApiConfig } from '../types/auth.types';
 
 export const API_CONFIG: ApiConfig = {
-  BASE_URL: 'http://192.168.0.106:5000',
+  BASE_URL: 'http://192.168.0.102:5000',
   ENDPOINTS: {
     LOGIN: '/api/auth/login',
     REGISTER: '/api/auth/register',

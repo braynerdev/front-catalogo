@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
+  StyleSheet,
 } from 'react-native';
+import { Text, TextInput as PaperTextInput } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
-import { Toast } from '../components/Toast';
-import { FormInput } from '../components/FormInput';
-import { styles } from '../styles/RegisterScreen.styles';
+import { AppButton, AppTextInput } from '../components/common';
+import { AppSnackbar } from '../components/AppSnackbar';
 import { validateRegisterForm } from '../utils/validation';
 import { parseBackendErrors, getErrorMessage } from '../utils/error.parser';
 import { useToast } from '../hooks/useToast';
@@ -82,20 +80,15 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigateToLogi
         showToast(response.message, 'error');
       }
     } catch (error: any) {
-      console.log('Erro no registro:', error);
-      console.log('Resposta do backend:', error?.response?.data);
-      
       const backendErrors = parseBackendErrors(error);
       
       if (Object.keys(backendErrors).length > 0) {
-        console.log('Erros mapeados para campos:', backendErrors);
         setMultipleErrors(backendErrors);
         touchAllFields(['name', 'username', 'email', 'password', 'confirmPassword']);
         const firstError = Object.values(backendErrors)[0];
         showToast(firstError, 'error');
       } else {
         const errorMsg = getErrorMessage(error);
-        console.log('Mensagem de erro genérica:', errorMsg);
         showToast(errorMsg, 'error');
       }
     } finally {
@@ -104,116 +97,163 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onNavigateToLogi
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView 
         style={styles.keyboardView} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Toast
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <View style={styles.header}>
+            <Text variant="headlineLarge" style={styles.title}>Criar Conta</Text>
+            <Text variant="bodyLarge" style={styles.subtitle}>Preencha os dados para começar</Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <AppTextInput
+              label="Nome Completo"
+              placeholder="Digite seu nome completo"
+              value={name}
+              onChangeText={(value) => handleFieldChange('name', value)}
+              onBlur={() => setFieldTouched('name')}
+              error={errors.name}
+              touched={touched.name}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="account" />}
+            />
+
+            <AppTextInput
+              label="Usuário"
+              placeholder="Escolha um nome de usuário"
+              value={username}
+              onChangeText={(value) => handleFieldChange('username', value)}
+              onBlur={() => setFieldTouched('username')}
+              autoCapitalize="none"
+              error={errors.username}
+              touched={touched.username}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="account-circle" />}
+            />
+
+            <AppTextInput
+              label="Email"
+              placeholder="seu@email.com"
+              value={email}
+              onChangeText={(value) => handleFieldChange('email', value)}
+              onBlur={() => setFieldTouched('email')}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              error={errors.email}
+              touched={touched.email}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="email" />}
+            />
+
+            <AppTextInput
+              label="Senha"
+              placeholder="Mínimo 6 caracteres (A-z, 0-9)"
+              value={password}
+              onChangeText={(value) => handleFieldChange('password', value)}
+              onBlur={() => setFieldTouched('password')}
+              secureTextEntry
+              error={errors.password}
+              touched={touched.password}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="lock" />}
+            />
+
+            <AppTextInput
+              label="Confirmar Senha"
+              placeholder="Digite a senha novamente"
+              value={confirmPassword}
+              onChangeText={(value) => handleFieldChange('confirmPassword', value)}
+              onBlur={() => setFieldTouched('confirmPassword')}
+              secureTextEntry
+              error={errors.confirmPassword}
+              touched={touched.confirmPassword}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="lock-check" />}
+            />
+
+            <AppButton
+              mode="contained"
+              onPress={handleRegister}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.button}
+            >
+              Cadastrar
+            </AppButton>
+
+            {onNavigateToLogin && (
+              <View style={styles.footer}>
+                <Text variant="bodyMedium">Já tem uma conta? </Text>
+                <AppButton
+                  mode="text"
+                  onPress={onNavigateToLogin}
+                  disabled={isLoading}
+                  style={styles.linkButton}
+                >
+                  Fazer login
+                </AppButton>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        <AppSnackbar
           visible={toast.visible}
           message={toast.message}
           type={toast.type}
-          onHide={hideToast}
+          onDismiss={hideToast}
         />
-
-        <View style={styles.header}>
-          <Text style={styles.title}>Criar Conta</Text>
-          <Text style={styles.subtitle}>Preencha os dados para começar</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <FormInput
-            label="Nome Completo"
-            placeholder="Digite seu nome completo"
-            value={name}
-            onChangeText={(value) => handleFieldChange('name', value)}
-            onBlur={() => setFieldTouched('name')}
-            error={errors.name}
-            touched={touched.name}
-            editable={!isLoading}
-          />
-
-          <FormInput
-            label="Usuário"
-            placeholder="Escolha um nome de usuário"
-            value={username}
-            onChangeText={(value) => handleFieldChange('username', value)}
-            onBlur={() => setFieldTouched('username')}
-            autoCapitalize="none"
-            error={errors.username}
-            touched={touched.username}
-            editable={!isLoading}
-          />
-
-          <FormInput
-            label="Email"
-            placeholder="seu@email.com"
-            value={email}
-            onChangeText={(value) => handleFieldChange('email', value)}
-            onBlur={() => setFieldTouched('email')}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            error={errors.email}
-            touched={touched.email}
-            editable={!isLoading}
-          />
-
-          <FormInput
-            label="Senha"
-            placeholder="Mínimo 6 caracteres (A-z, 0-9)"
-            value={password}
-            onChangeText={(value) => handleFieldChange('password', value)}
-            onBlur={() => setFieldTouched('password')}
-            secureTextEntry
-            error={errors.password}
-            touched={touched.password}
-            editable={!isLoading}
-          />
-
-          <FormInput
-            label="Confirmar Senha"
-            placeholder="Digite a senha novamente"
-            value={confirmPassword}
-            onChangeText={(value) => handleFieldChange('confirmPassword', value)}
-            onBlur={() => setFieldTouched('confirmPassword')}
-            secureTextEntry
-            error={errors.confirmPassword}
-            touched={touched.confirmPassword}
-            editable={!isLoading}
-          />
-
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Cadastrar</Text>
-            )}
-          </TouchableOpacity>
-
-          {onNavigateToLogin && (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Já tem uma conta? </Text>
-              <TouchableOpacity
-                onPress={onNavigateToLogin}
-                disabled={isLoading}
-              >
-                <Text style={styles.linkText}>Fazer login</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  title: {
+    marginBottom: 8,
+    fontWeight: '700',
+  },
+  subtitle: {
+    opacity: 0.7,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  button: {
+    marginTop: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  linkButton: {
+    marginVertical: 0,
+  },
+});

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
+import { Text, Card, Button, Portal, Dialog, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../constants';
 import { uploadService } from '../services/upload.service';
 
 interface ImagePickerComponentProps {
@@ -16,16 +16,15 @@ export const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
   label = 'Imagem',
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
 
   const requestPermissions = async () => {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
     const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (cameraPermission.status !== 'granted' || libraryPermission.status !== 'granted') {
-      Alert.alert(
-        'Permissões necessárias',
-        'Precisamos de permissão para acessar a câmera e galeria de fotos.'
-      );
+      setShowPermissionDialog(true);
       return false;
     }
 
@@ -33,6 +32,8 @@ export const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
   };
 
   const pickImage = async (useCamera: boolean) => {
+    setShowDialog(false);
+    
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
 
@@ -58,125 +59,133 @@ export const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
         onImageSelect(uploadResponse.url);
       }
     } catch (error: any) {
-      Alert.alert('Erro', error.message || 'Erro ao processar imagem');
+      setShowPermissionDialog(true);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const showOptions = () => {
-    Alert.alert(
-      'Selecionar imagem',
-      'Escolha uma opção',
-      [
-        {
-          text: 'Tirar foto',
-          onPress: () => pickImage(true),
-        },
-        {
-          text: 'Escolher da galeria',
-          onPress: () => pickImage(false),
-        },
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-      ]
-    );
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text variant="bodyMedium" style={styles.label}>{label}</Text>
       
-      <TouchableOpacity
-        style={styles.imageContainer}
-        onPress={showOptions}
-        disabled={isUploading}
-      >
-        {isUploading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Enviando imagem...</Text>
-          </View>
-        ) : value ? (
-          <Image source={{ uri: value }} style={styles.image} />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={styles.placeholderIcon}>📷</Text>
-            <Text style={styles.placeholderText}>Toque para adicionar foto</Text>
-          </View>
+      <Card style={styles.imageCard} mode="outlined">
+        <Card.Content style={styles.cardContent}>
+          {isUploading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" />
+              <Text variant="bodySmall" style={styles.loadingText}>
+                Enviando imagem...
+              </Text>
+            </View>
+          ) : value ? (
+            <Image source={{ uri: value }} style={styles.image} />
+          ) : (
+            <View style={styles.placeholder}>
+              <Text style={styles.placeholderIcon}>📷</Text>
+              <Text variant="bodyMedium" style={styles.placeholderText}>
+                Toque para adicionar foto
+              </Text>
+            </View>
+          )}
+        </Card.Content>
+        {!isUploading && (
+          <Card.Actions>
+            <Button
+              mode="contained-tonal"
+              onPress={() => setShowDialog(true)}
+              icon={value ? 'image-edit' : 'camera'}
+            >
+              {value ? 'Alterar' : 'Adicionar'}
+            </Button>
+          </Card.Actions>
         )}
-      </TouchableOpacity>
+      </Card>
 
-      {value && !isUploading && (
-        <TouchableOpacity
-          style={styles.changeButton}
-          onPress={showOptions}
+      <Portal>
+        <Dialog visible={showDialog} onDismiss={() => setShowDialog(false)}>
+          <Dialog.Title>Selecionar imagem</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">Escolha uma opção</Text>
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button onPress={() => pickImage(true)} icon="camera">
+              Tirar foto
+            </Button>
+            <Button onPress={() => pickImage(false)} icon="image">
+              Galeria
+            </Button>
+            <Button onPress={() => setShowDialog(false)}>
+              Cancelar
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog 
+          visible={showPermissionDialog} 
+          onDismiss={() => setShowPermissionDialog(false)}
         >
-          <Text style={styles.changeButtonText}>Alterar imagem</Text>
-        </TouchableOpacity>
-      )}
+          <Dialog.Title>Permissões necessárias</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Precisamos de permissão para acessar a câmera e galeria de fotos.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowPermissionDialog(false)}>
+              OK
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: SPACING.lg,
+    marginVertical: 8,
   },
   label: {
-    fontSize: FONT_SIZES.sm,
     fontWeight: '600',
-    color: COLORS.text.primary,
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
-  imageContainer: {
-    width: '100%',
-    height: 200,
-    borderRadius: BORDER_RADIUS.lg,
+  imageCard: {
     overflow: 'hidden',
-    backgroundColor: COLORS.gray[100],
-    borderWidth: 2,
-    borderColor: COLORS.gray[200],
-    borderStyle: 'dashed',
+  },
+  cardContent: {
+    padding: 0,
+    minHeight: 200,
   },
   image: {
     width: '100%',
-    height: '100%',
+    height: 200,
     resizeMode: 'cover',
   },
   placeholder: {
-    flex: 1,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F3F4F6',
   },
   placeholderIcon: {
     fontSize: 48,
-    marginBottom: SPACING.sm,
+    marginBottom: 8,
   },
   placeholderText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.text.secondary,
+    opacity: 0.6,
   },
   loadingContainer: {
-    flex: 1,
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: SPACING.sm,
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.text.secondary,
+    marginTop: 12,
+    opacity: 0.7,
   },
-  changeButton: {
-    marginTop: SPACING.sm,
-    paddingVertical: SPACING.sm,
-    alignItems: 'center',
-  },
-  changeButtonText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
-    fontWeight: '600',
+  dialogActions: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
   },
 });

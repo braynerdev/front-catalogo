@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
+  StyleSheet,
 } from 'react-native';
+import { Text, TextInput as PaperTextInput } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
-import { Toast } from '../components/Toast';
-import { styles } from '../styles/LoginScreen.styles';
+import { AppButton, AppTextInput } from '../components/common';
+import { AppSnackbar } from '../components/AppSnackbar';
 import { validateLoginForm } from '../utils/validation';
 import { useToast } from '../hooks/useToast';
 
@@ -64,94 +62,128 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onNavigateToRegister }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <KeyboardAvoidingView 
         style={styles.keyboardView} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Toast
-          visible={toast.visible}
-          message={toast.message}
-          type={toast.type}
-          onHide={hideToast}
-        />
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <View style={styles.header}>
+            <Text variant="headlineLarge" style={styles.title}>Bem-vindo</Text>
+            <Text variant="bodyLarge" style={styles.subtitle}>Faça login para continuar</Text>
+          </View>
 
-        <View style={styles.header}>
-          <Text style={styles.title}>Bem-vindo</Text>
-          <Text style={styles.subtitle}>Faça login para continuar</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Usuário</Text>
-            <TextInput
-              style={[styles.input, usernameError ? styles.inputError : null]}
+          <View style={styles.formContainer}>
+            <AppTextInput
+              label="Usuário"
               placeholder="Digite seu usuário"
-              placeholderTextColor="#9CA3AF"
               value={username}
               onChangeText={(text) => {
                 setUsername(text);
                 setUsernameError('');
               }}
+              error={usernameError}
+              touched={!!usernameError}
               autoCapitalize="none"
-              editable={!isLoading}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="account" />}
             />
-            {usernameError ? (
-              <Text style={styles.errorText}>{usernameError}</Text>
-            ) : null}
-          </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Senha</Text>
-            <TextInput
-              style={[styles.input, passwordError ? styles.inputError : null]}
+            <AppTextInput
+              label="Senha"
               placeholder="Digite sua senha"
-              placeholderTextColor="#9CA3AF"
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
                 setPasswordError('');
               }}
+              error={passwordError}
+              touched={!!passwordError}
               secureTextEntry
-              editable={!isLoading}
+              disabled={isLoading}
+              left={<PaperTextInput.Icon icon="lock" />}
             />
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Entrar</Text>
+            <AppButton
+              mode="contained"
+              onPress={handleLogin}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.button}
+            >
+              Entrar
+            </AppButton>
+
+            {onNavigateToRegister && (
+              <View style={styles.footer}>
+                <Text variant="bodyMedium">Não tem uma conta? </Text>
+                <AppButton
+                  mode="text"
+                  onPress={onNavigateToRegister}
+                  disabled={isLoading}
+                  style={styles.linkButton}
+                >
+                  Cadastre-se
+                </AppButton>
+              </View>
             )}
-          </TouchableOpacity>
+          </View>
+        </ScrollView>
 
-          {onNavigateToRegister && (
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Não tem uma conta? </Text>
-              <TouchableOpacity
-                onPress={onNavigateToRegister}
-                disabled={isLoading}
-              >
-                <Text style={styles.linkText}>Cadastre-se</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+        <AppSnackbar
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onDismiss={hideToast}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  title: {
+    marginBottom: 8,
+    fontWeight: '700',
+  },
+  subtitle: {
+    opacity: 0.7,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  button: {
+    marginTop: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  linkButton: {
+    marginVertical: 0,
+  },
+});

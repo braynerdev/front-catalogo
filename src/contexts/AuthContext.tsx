@@ -64,7 +64,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
       setAuthState({
         user: null,
         token: null,
@@ -92,8 +91,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return response;
     } catch (error: any) {
-      console.error('Erro no AuthContext.login:', error);
-      
       let errorMessage = 'Erro ao fazer login';
       
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network')) {
@@ -119,7 +116,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await authService.register(data);
       return response;
     } catch (error: any) {
-      console.error('Erro no registro:', error);
       return {
         valid: false,
         message: error?.response?.data?.message || 'Erro ao registrar usuário',
@@ -134,7 +130,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await authService.logout(authState.user.username);
       }
     } catch (error) {
-      console.error('Erro no logout:', error);
     } finally {
       setAuthState({
         user: null,
